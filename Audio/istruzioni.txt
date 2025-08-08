@@ -1,0 +1,14 @@
+entrare nella cartella Desktop/Artes con il comando
+cd Desktop/Artes
+per attivare l'env digita: source artes_env/bin/activate
+subito dopo digitare:
+python main.py
+
+NOTA: assicurarsi che tutto sia connesso in wifi e con il cavo usb (GPS)
+
+
+RIASSUMENDO:
+
+cd Desktop/Artes
+source artes_env/bin/activate
+python main.py
