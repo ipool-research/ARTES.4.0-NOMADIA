@@ -1,0 +1,1 @@
+{"altezza": 512, "lunghezza": 512, "colori": [255, 127, 85]}
