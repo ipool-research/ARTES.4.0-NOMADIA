@@ -72,7 +72,7 @@ ARTES.4.0-NOMADIA/
 Le dipendenze principali sono contenute rispettivamente nei file requirements.txt di ciascuna cartella (audio e video).
 
 Le dipendenze principali risultano essere:
-  - **Python 3.8+**
+  - **Python 3.9+**
   - `TensorFlow` o `PyTorch`
   - `OpenCV`
   - `NumPy`, `Pandas`
