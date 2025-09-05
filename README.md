@@ -27,9 +27,10 @@ L’obiettivo è **riconoscere automaticamente ammaloramenti dell’asfalto** (f
    - **Video della pavimentazione** stradale.
 3. I dati vengono elaborati in locale tramite modelli AI.
 4. Gli ammaloramenti vengono **identificati, classificati e georeferenziati**.
-5. I risultati sono mostrati su una mappa come quella in figura qui sotto.
+5. Si genera così un indice che descrive lo stado di deterioramento dei vari tratti di strada analizzati.
+6. I risultati sono mostrati su una mappa come quella in figura qui sotto in cui a ciascun colore corrisponde un indice del degrado stradale.
 <img src="results/output_map.png" alt="Logo" /> 
-a ciascun colore corrisponde un indice del degrado stradale
+
 
 ## ⚙️ Tecnologie Utilizzate
 
@@ -111,16 +112,17 @@ eseguire il sistema di raccolta ed elaborazione con il comando:
 ```bash
 python src/audio/main.py
 ```
-Per interrompere la misura basta premere il tasto "ENTER"
-Al termine il risultato dell'acquisizione sarà salvato all'interno di apposite cartelle, per i dati audio (interpolati) e per i dati gps (suddivisi in intervalli da 20m) 
+Per interrompere la misura basta premere il tasto "ENTER".  
 
-Per quanto riguarda il video acquisito della gopro, si può scegliere la metodologia preferita per scaricarlo (wifi, cavo, sd). Si consiglia il salvataggio in una cartella di facile accesso (es: data).
+Al termine il risultato dell'acquisizione sarà salvato all'interno di apposite cartelle, per i dati audio (interpolati) e per i dati gps (suddivisi in intervalli da 20m). 
+
+Per quanto riguarda il video acquisito della GoPro, si può scegliere la metodologia preferita per scaricarlo (wifi, cavo, sd). Si consiglia il salvataggio in una cartella di facile accesso (es: data).
 
 ## 📋 Elaborazione misura
-Al fine di analizzare coerentemente i dati raccolti e preprocessati durante la fase di misuare è necessario procedere per step: iniziando con l'analisi della componente acustica (al fine di produrre una prima classificazione), per poi concludere con la parte visiva per ottenere l'indice finale su ciascun tratto.
+Al fine di analizzare coerentemente i dati raccolti e preprocessati durante la fase di misura è necessario procedere per step: iniziando con l'analisi della componente acustica (al fine di produrre una prima classificazione), per poi concludere con la parte visiva per ottenere l'indice finale su ciascun tratto.
 
 ### PARTE AUDIO
-Per eseguire l'analisi audio è sufficiente eseguire il codice:
+Per effettuare l'analisi audio è sufficiente eseguire il codice:
 ```bash
 python src/audio/Classificazione_TCN.py
 ```
