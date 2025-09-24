@@ -124,7 +124,7 @@ Al fine di analizzare coerentemente i dati raccolti e preprocessati durante la f
 ### PARTE AUDIO
 Per effettuare l'analisi audio è sufficiente eseguire il codice:
 ```bash
-python src/audio/Classificazione_TCN.py
+python src/audio/Classificazione_tcn.py
 ```
 assicurandosi di scegliere il fit più adatto alla misura in analisi (urbana, extraurbana o autostradale) decommentando la riga appropriata (37-39).
 
