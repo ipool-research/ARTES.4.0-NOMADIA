@@ -16,9 +16,9 @@ class AmmaloramentiProcessor:
         self.output_html=os.path.join(cartella,'mappa_intervalli_bordi.html')
 
     def calcola_somma_colonne(self, df):
-        if 'frame' in df.columns:
-            return pd.DataFrame([df.drop(columns=['frame']).sum()])
-        return pd.DataFrame([df.sum()])
+        cols = [c for c in df.columns if c not in ("frame", "Unnamed: 0")]
+        num = df[cols].apply(pd.to_numeric, errors="coerce").fillna(0)
+        return pd.DataFrame([num.sum()])
 
     def calcola_totali_accorpati(self, sum_df):
         poth = {
@@ -44,32 +44,39 @@ class AmmaloramentiProcessor:
 
     def process_intervallo(self, file_path, id_intervallo, classe_acustica):
         try:
+            #print(f"[DEBUG start] id={id_intervallo}, classe={classe_acustica}, file={file_path}")
             df = pd.read_csv(file_path)
-            if classe_acustica == -1:
+            #print(f"[DEBUG csv] shape={df.shape}, cols={list(df.columns)}")
+
+            sum_df = self.calcola_somma_colonne(df)
+            poth, man, crack = self.calcola_totali_accorpati(sum_df)
+
+            cls_eff = classe_acustica
+            if cls_eff != -1 and man["SX/BOTH"] > 0:
+                cls_eff -= 1
+
+            if cls_eff == -1 or cls_eff < 0:
                 indice = calcola_indice(df)
             else:
-                sum_df = self.calcola_somma_colonne(df)
-                poth, man, crack = self.calcola_totali_accorpati(sum_df)
-                if man["SX/BOTH"]> 0:
-                    classe_acustica -=1
-                    if classe_acustica <0:
-                        indice = calcola_indice(df)
-                    else: 
-                        indice = self.calcola_indice_per_riga(
-                            classe_acustica,
-                            poth["SX/BOTH"], poth["DX"], poth["FUORI"],
-                            crack["SX/BOTH"], crack["DX"], crack["FUORI"]
-                        )
+                indice = calcola_indice_per_riga(
+                    cls_eff,
+                    poth["SX/BOTH"], poth["DX"], poth["FUORI"],
+                    crack["SX/BOTH"], crack["DX"], crack["FUORI"]
+                )
+
             result = {'id_intervallo': id_intervallo}
-            # copio valori originali sum_df row[0]
             row = sum_df.iloc[0]
             for col in row.index:
                 result[col] = int(row[col])
-            result['indice_finale'] = indice
+            result['indice_finale'] = int(indice)
             return result
+
         except Exception as e:
-            err = traceback.format_exc()
-            return {'id_intervallo': id_intervallo, 'error': err}
+            #import sys, traceback
+            #print(f"[ERRORE diretta] id={id_intervallo} tipo={type(e).__name__} msg={e}", file=sys.stderr)
+            #traceback.print_exc()
+            return {'id_intervallo': id_intervallo, 'error': traceback.format_exc()}
+
 
     def run(self):
 
@@ -92,6 +99,9 @@ class AmmaloramentiProcessor:
                 if x < len(gps_df):
                     cls = gps_df.iloc[x]['classe_acustica']
                     tasks.append((os.path.join(self.cartella_input, fname), x, cls))
+
+        # DEBUG: limita a 2 intervalli per leggere meglio i log
+        #tasks = tasks[:2]
 
         future_to_params = {}
         results_dict = {}
@@ -193,29 +203,32 @@ def get_color(indice):
     }.get(indice, 'gray')
 
 def calcola_indice(df):
-    P_A = int(df[["Alligator_both","Pothole_both","Alligator_sx","Pothole_sx", "Alligator_dx","Pothole_dx", "Alligator","Pothole"]].sum(axis=1).iloc[0])
-    L_T = int(df[["Longitudinal_both","Transverse_both","Longitudinal_sx","Transverse_sx", "Longitudinal_dx","Transverse_dx", "Longitudinal","Transverse"]].sum(axis=1).iloc[0])
+    cols_pot = ["Alligator_both","Pothole_both","Alligator_sx","Pothole_sx",
+                "Alligator_dx","Pothole_dx","Alligator","Pothole"]
+    cols_crk = ["Longitudinal_both","Transverse_both","Longitudinal_sx","Transverse_sx",
+                "Longitudinal_dx","Transverse_dx","Longitudinal","Transverse"]
+
+    pot_df = df[cols_pot].apply(pd.to_numeric, errors="coerce").fillna(0)
+    crk_df = df[cols_crk].apply(pd.to_numeric, errors="coerce").fillna(0)
+
+    P_A = int(pot_df.to_numpy().sum())
+    L_T = int(crk_df.to_numpy().sum())
+
     if P_A > 6:
         return 3
     elif P_A > 3:
-        if L_T > 6:
-            return 3
-        else: 
-            return 2
+        return 3 if L_T > 6 else 2
     elif P_A > 0:
-        if L_T > 6:
-            return 2
-        else: 
-            return 1
-    elif P_A == 0:
+        return 2 if L_T > 6 else 1
+    else:
         if L_T > 6:
             return 2
         elif L_T > 3:
             return 1
         else:
             return 0
-    else:
-        return 0
+
+
     
 def calcola_indice_per_riga(classe_acustica, pot_sx_both, pot_dx, pot_fuori,
                                 crk_sx_both, crk_dx, crk_fuori):
