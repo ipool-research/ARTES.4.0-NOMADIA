@@ -138,6 +138,11 @@ python src/audio/Classificazione_tcn.py
 assicurandosi di scegliere il fit più adatto alla misura in analisi (urbana, extraurbana o autostradale) decommentando la riga appropriata (37-39).
 
 ### PARTE VIDEO
+Per effettuare l'analisi video è prima necessario attivare l'ambiente virtuale mediante il comando
+```bash
+source artes_video/bin/activate
+```
+
 Sia **path_video** il percorso alla cartella contenente il/i video registrati durante l'esecuzione della misura; e **path_indice_audio** il percorso al file csv risultante dall'analisi audio appena svolta.
 
 Per eseguire l'analisi video è sufficiente indicare tali percorsi all'interno del file **src/video/main.py** (rispettivamente righe 9 e 22) e lanciare il codice:
