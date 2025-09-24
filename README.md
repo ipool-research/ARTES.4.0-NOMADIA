@@ -107,8 +107,13 @@ deactivate
 Ripetere gli step di creazione, attivazione e installazione anche per la parte video
 
 ## 📋 Esecuzione misura
-Verificare che tutti gli strumenti siano connessi con la scheda di elaborazione ed
-eseguire il sistema di raccolta ed elaborazione con il comando:
+Come prima cosa attivare l'apposito ambiente virtuale appena creato
+```bash
+source nome_ambiente_audio/bin/activate
+```
+
+Dopodiché verificare che tutti gli strumenti siano connessi con la scheda di elaborazione ed
+eseguire il codice di raccolta dati con il comando:
 ```bash
 python src/audio/main.py
 ```
@@ -122,7 +127,11 @@ Per quanto riguarda il video acquisito della GoPro, si può scegliere la metodol
 Al fine di analizzare coerentemente i dati raccolti e preprocessati durante la fase di misura è necessario procedere per step: iniziando con l'analisi della componente acustica (al fine di produrre una prima classificazione), per poi concludere con la parte visiva per ottenere l'indice finale su ciascun tratto.
 
 ### PARTE AUDIO
-Per effettuare l'analisi audio è sufficiente eseguire il codice:
+Per effettuare l'analisi audio è prima necessario disattivare l'ambiente virtuale mediante il comando
+```bash
+deactivate
+```
+è poi sufficiente eseguire il codice:
 ```bash
 python src/audio/Classificazione_tcn.py
 ```
