@@ -27,9 +27,10 @@ L’obiettivo è **riconoscere automaticamente ammaloramenti dell’asfalto** (f
    - **Video della pavimentazione** stradale.
 3. I dati vengono elaborati in locale tramite modelli AI.
 4. Gli ammaloramenti vengono **identificati, classificati e georeferenziati**.
-5. I risultati sono mostrati su una mappa come quella in figura qui sotto.
+5. Si genera così un indice che descrive lo stado di deterioramento dei vari tratti di strada analizzati.
+6. I risultati sono mostrati su una mappa come quella in figura qui sotto in cui a ciascun colore corrisponde un indice del degrado stradale.
 <img src="results/output_map.png" alt="Logo" /> 
-a ciascun colore corrisponde un indice del degrado stradale
+
 
 ## ⚙️ Tecnologie Utilizzate
 
@@ -106,27 +107,42 @@ deactivate
 Ripetere gli step di creazione, attivazione e installazione anche per la parte video
 
 ## 📋 Esecuzione misura
-Verificare che tutti gli strumenti siano connessi con la scheda di elaborazione ed
-eseguire il sistema di raccolta ed elaborazione con il comando:
+Come prima cosa attivare l'apposito ambiente virtuale appena creato
+```bash
+source nome_ambiente_audio/bin/activate
+```
+
+Dopodiché verificare che tutti gli strumenti siano connessi con la scheda di elaborazione ed
+eseguire il codice di raccolta dati con il comando:
 ```bash
 python src/audio/main.py
 ```
-Per interrompere la misura basta premere il tasto "ENTER"
-Al termine il risultato dell'acquisizione sarà salvato all'interno di apposite cartelle, per i dati audio (interpolati) e per i dati gps (suddivisi in intervalli da 20m) 
+Per interrompere la misura basta premere il tasto "ENTER".  
 
-Per quanto riguarda il video acquisito della gopro, si può scegliere la metodologia preferita per scaricarlo (wifi, cavo, sd). Si consiglia il salvataggio in una cartella di facile accesso (es: data).
+Al termine il risultato dell'acquisizione sarà salvato all'interno di apposite cartelle, per i dati audio (interpolati) e per i dati gps (suddivisi in intervalli da 20m). 
+
+Per quanto riguarda il video acquisito della GoPro, si può scegliere la metodologia preferita per scaricarlo (wifi, cavo, sd). Si consiglia il salvataggio in una cartella di facile accesso (es: data).
 
 ## 📋 Elaborazione misura
-Al fine di analizzare coerentemente i dati raccolti e preprocessati durante la fase di misuare è necessario procedere per step: iniziando con l'analisi della componente acustica (al fine di produrre una prima classificazione), per poi concludere con la parte visiva per ottenere l'indice finale su ciascun tratto.
+Al fine di analizzare coerentemente i dati raccolti e preprocessati durante la fase di misura è necessario procedere per step: iniziando con l'analisi della componente acustica (al fine di produrre una prima classificazione), per poi concludere con la parte visiva per ottenere l'indice finale su ciascun tratto.
 
 ### PARTE AUDIO
-Per eseguire l'analisi audio è sufficiente eseguire il codice:
+Per effettuare l'analisi audio è prima necessario disattivare l'ambiente virtuale mediante il comando
 ```bash
-python src/audio/Classificazione_TCN.py
+deactivate
+```
+è poi sufficiente eseguire il codice:
+```bash
+python src/audio/Classificazione_tcn.py
 ```
 assicurandosi di scegliere il fit più adatto alla misura in analisi (urbana, extraurbana o autostradale) decommentando la riga appropriata (37-39).
 
 ### PARTE VIDEO
+Per effettuare l'analisi video è prima necessario attivare l'ambiente virtuale mediante il comando
+```bash
+source artes_video/bin/activate
+```
+
 Sia **path_video** il percorso alla cartella contenente il/i video registrati durante l'esecuzione della misura; e **path_indice_audio** il percorso al file csv risultante dall'analisi audio appena svolta.
 
 Per eseguire l'analisi video è sufficiente indicare tali percorsi all'interno del file **src/video/main.py** (rispettivamente righe 9 e 22) e lanciare il codice:
