@@ -3,7 +3,7 @@ import pandas as pd
 from VIDEO import Video_processing
 from MODELS import ModelProcessor
 from INDEX import Index
-from FrameExtracton import GoProH265FastExtractor
+from FRAMEEXTRACTION import GoProH265FastExtractor
 from PROCESSOR import AmmaloramentiProcessor
 
 cartella_video = "video" # percorso della cartella che contiene il video da elaborare
