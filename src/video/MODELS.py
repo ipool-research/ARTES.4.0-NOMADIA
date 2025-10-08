@@ -20,11 +20,11 @@ class ModelProcessor:
         self.folder_path = os.path.join(process_folder, 'frames_estratti')
         self.model_name = model_name
         if model_name == 'yolo':
-            self.model_path = r"F:\ARTES\VERSIONE_DB\Training\dataset_db\train_yolo_no-empty\weights\best.pt"  # load the model
+            self.model_path = r"/home/ipool/Desktop/Artes_CUDA/MODELLI/yolo.pt"  # load the model
         else:
-            self.model_path = r"/home/ipool/Desktop/Artes/MODELLI/yolo.pt" #load the model (cambiare i path)
+            self.model_path = r"/home/ipool/Desktop/Artes_CUDA/MODELLI/rtdetr.pt" #load the model (cambiare i path)
 
-    def run_all_folders_filtered(self, batch_size=8, img_size=512, confidence_thresholds=None, save_images=False):
+    def run_all_folders_filtered(self, batch_size=8, img_size=512, confidence_thresholds=None, save_images=True):
         folders = sorted([
             os.path.join(self.folder_path, d)
             for d in os.listdir(self.folder_path)
@@ -57,7 +57,7 @@ def process_folder_wrapper(args):
 
 
 
-def process_folder_filtered(folder_path, model, img_size=512, batch_size=8, confidence_thresholds=None, save_images=False):
+def process_folder_filtered(folder_path, model, img_size=512, batch_size=8, confidence_thresholds=None, save_images=True):
     image_paths = sorted(glob(os.path.join(folder_path, '*.jpg')) +
                          glob(os.path.join(folder_path, '*.png')))
 
@@ -123,7 +123,7 @@ def process_folder_filtered(folder_path, model, img_size=512, batch_size=8, conf
 
 
 def process_folder_rtdetr_batched(folder_path, model, mode='filtered', img_size=512, batch_size=8,
-                                  confidence_thresholds=None, iou_thr_wbf=0.2, save_images=False):
+                                  confidence_thresholds=None, iou_thr_wbf=0.2, save_images=True):
     image_paths = sorted(glob(os.path.join(folder_path, '*.jpg')) +
                          glob(os.path.join(folder_path, '*.png')) +
                          glob(os.path.join(folder_path, '*.jpeg')))
@@ -211,11 +211,19 @@ def process_folder_rtdetr_batched(folder_path, model, mode='filtered', img_size=
 
 
 def save_results_wbf(image, name, path_save, boxes_list, scores_list, labels_list,
-                     colors=[(b, g, r) for (r, g, b) in [[0, 130, 200], [60, 180, 75], [230, 25, 75], [245, 130, 48], [145, 30, 180]]],
+                     colors=[(31, 119, 180), (44, 160, 44), (255, 127, 14), (148, 103, 189), (140, 86, 75)],
                      class_names=['Longitudinal', 'Transverse', 'Alligator', 'Pothole', 'Manhole'],
                      image_size=[512, 512],
-                     save_images=False):
-    
+                     save_images=True):
+    """
+    Save YOLO label files and (optionally) images with drawn boxes.
+    Handles boxes as xyxy or xcycwh, normalized or pixel.
+    Uses the real image size for scaling.
+    """
+    import os
+    import cv2
+
+    # Folders
     labels_folder = os.path.join(path_save, 'labels')
     os.makedirs(labels_folder, exist_ok=True)
 
@@ -224,36 +232,73 @@ def save_results_wbf(image, name, path_save, boxes_list, scores_list, labels_lis
         os.makedirs(images_folder, exist_ok=True)
         image_copy = image.copy()
 
+    H, W = image.shape[:2]
+
+    def to_xyxy_pixels(box):
+        bx = list(map(float, box))
+        # normalized if all in [0, 1.1]
+        normalized = all(0.0 <= v <= 1.1 for v in bx)
+        if normalized:
+            bx = [bx[0]*W, bx[1]*H, bx[2]*W, bx[3]*H]
+
+        x0, y0, x2v, y2v = bx[0], bx[1], bx[2], bx[3]
+
+        # Decide format: if x2<x0 or y2<y0 or looks like sizes, assume center format
+        if (x2v < x0) or (y2v < y0) or (x2v <= W*0.5 and y2v <= H*0.5 and x0 <= W and y0 <= H):
+            # xcycwh
+            xc, yc, bw, bh = bx
+            x1 = int(round(xc - bw/2)); y1 = int(round(yc - bh/2))
+            x2 = int(round(xc + bw/2)); y2 = int(round(yc + bh/2))
+        else:
+            # xyxy
+            x1 = int(round(x0)); y1 = int(round(y0))
+            x2 = int(round(x2v)); y2 = int(round(y2v))
+
+        if x1 > x2: x1, x2 = x2, x1
+        if y1 > y2: y1, y2 = y2, y1
+
+        x1 = max(0, min(W-1, x1)); y1 = max(0, min(H-1, y1))
+        x2 = max(0, min(W-1, x2)); y2 = max(0, min(H-1, y2))
+
+        if x2 == x1: x2 = min(W-1, x1+1)
+        if y2 == y1: y2 = min(H-1, y1+1)
+        return x1, y1, x2, y2
+
     label_lines = []
 
-    for box, cls in zip(boxes_list, labels_list):
-        x1 = int(box[0] * image_size[0])
-        y1 = int(box[1] * image_size[1])
-        x2 = int(box[2] * image_size[0])
-        y2 = int(box[3] * image_size[1])
+    for i, box in enumerate(boxes_list):
+        cls = int(labels_list[i]) if i < len(labels_list) else 0
+        x1, y1, x2, y2 = to_xyxy_pixels(box)
 
-        # Coordinate YOLO normalizzate
-        box_width = box[2] - box[0]
-        box_height = box[3] - box[1]
-        x_center = box[0] + box_width / 2
-        y_center = box[1] + box_height / 2
-
-        label_line = f"{int(cls)} {x_center:.6f} {y_center:.6f} {box_width:.6f} {box_height:.6f}"
-        label_lines.append(label_line)
+        # YOLO normalized xc,yc,w,h
+        xc = ((x1 + x2) / 2) / W
+        yc = ((y1 + y2) / 2) / H
+        bw = (x2 - x1) / W
+        bh = (y2 - y1) / H
+        label_lines.append(f"{cls} {xc:.6f} {yc:.6f} {bw:.6f} {bh:.6f}")
 
         if save_images:
-            color = colors[int(cls)]
-            label = f'{class_names[int(cls)]}'
-            cv2.rectangle(image_copy, (x1, y1), (x2, y2), color, 1)
-            (tw, th), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-            cv2.rectangle(image_copy, (x1, y1 - th - 5), (x1 + tw + 5, y1), color, -1)
-            cv2.putText(image_copy, label, (x1 + 2, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            color = colors[cls % len(colors)] if colors else (0, 255, 0)
+            name_txt = class_names[cls] if cls < len(class_names) else f"class_{cls}"
 
+            # Draw rect
+            cv2.rectangle(image_copy, (x1, y1), (x2, y2), color, 2)
+            # Label bg + text
+            (tw, th), baseline = cv2.getTextSize(name_txt, cv2.FONT_HERSHEY_DUPLEX, 0.6, 1)
+            y_text = max(th + 2, y1 - 5)
+            tl = (x1, y_text - th - 4)
+            br = (x1 + tw + 6, y_text + 2)
+            cv2.rectangle(image_copy, tl, br, color, -1)
+            cv2.putText(image_copy, name_txt, (x1 + 3, y_text), cv2.FONT_HERSHEY_DUPLEX, 0.6, (255,255,255), 1, cv2.LINE_AA)
+
+    # Write labels
     label_filename = os.path.splitext(name)[0] + '.txt'
-    with open(os.path.join(labels_folder, label_filename), 'w') as f:
-        f.write('\n'.join(label_lines))
+    with open(os.path.join(labels_folder, label_filename), 'w', encoding='utf-8', newline='\n') as f:
+        f.write('\n'.join(label_lines) + ('\n' if label_lines else ''))
 
+    # Save image
     if save_images:
-        cv2.imwrite(os.path.join(images_folder, name), image_copy)
+        img_name = name if name.lower().endswith(('.jpg', '.jpeg', '.png')) else (os.path.splitext(name)[0] + '.jpg')
+        cv2.imwrite(os.path.join(images_folder, img_name), image_copy)
 
 

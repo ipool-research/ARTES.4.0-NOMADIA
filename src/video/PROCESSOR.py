@@ -338,4 +338,3 @@ def calcola_indice_per_riga(classe_acustica, pot_sx_both, pot_dx, pot_fuori,
             return 3
         
         return 0
-
