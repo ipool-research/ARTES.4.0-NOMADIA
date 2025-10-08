@@ -88,7 +88,7 @@ Le dipendenze principali risultano essere:
   - GPS
 
 Per installare tutte le dipendenze necessarie sarà sufficiente mettersi con il terminale nella 
-cartella **src/creazione_setting** ed eseguire:
+cartella  **src/creazione_setting** ed eseguire:
 ```bash
 chmod +x creazione_setting.sh
 
@@ -98,8 +98,9 @@ Al termine dell'esecuzione si sarenno create due cartelle (nella stessa parent d
 **Artes_Audio** e **Artes_Video** contenente ciascuna il proprio ambiente virtuale.
 
 ## 📋 Esecuzione misura
-Verificare per prima cosa che tutti gli strumenti siano connessi con la scheda di elaborazione ed
-entrare con il terminale nella cartella **src/scripts**, dopodichè attivare e lanciare il codice di raccolta dati con i comandi:
+Verificare per prima cosa che tutti gli strumenti siano connessi con la scheda di elaborazione (GPS, PINT e GoPro) ed
+entrare con il terminale nella 
+cartella **src/scripts**, dopodichè attivare e lanciare il codice di raccolta dati con i comandi:
 ```bash
 chmod +x avvio_misura.sh
 
