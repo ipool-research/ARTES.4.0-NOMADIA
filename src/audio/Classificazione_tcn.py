@@ -33,12 +33,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import sosfilt
 import pandas as pd
+import tkinter as tk 
+
+root = tk.Tk()
+root.withdraw()
+fit = tk.filedialog.askopenfilename(title = "Selezionare FIT del tipo di strada da analizzare")
 cwd = os.getcwd()
 #fit = 'Fit_Autostrada.pkl'
 #fit = Fit_Extraurbana.pkl'
-fit = 'Fit_Urbana.pkl'
+#fit = 'Fit_Urbana.pkl'
 #Carica i parametri del fit a*log(v) + b
-with open(f'FIT\{fit}','rb') as f:
+with open(fit,'rb') as f:
         Fit_modello_speed_Lf = pkl.load(f)
 
 #Parametri del modello di fit popt_fit[0] = a, popt_fit[1] = b, velocità in km/h
@@ -53,10 +58,12 @@ sos_lf = filtro_lf['LF[315,1000]']
 #Dati intervalli del percorso gps, ciascuna riga corrisponde ai punti di inizio e fine per un segmento con lunghezza 
 #pari a 20 mt, velocità è data in m/s 
 fold = os.path.dirname(cwd)
-path_gps_csv_files = os.path.join(fold, 'data', 'gps')
+path_gps_csv_files = tk.filedialog.askdirectory(title = "Seleziona cartella dati GPS") 
+#os.path.join(fold, 'Artes_audio', 'gps', 'intervalli', 'ID2_GPS_19-09-2025_15_14_16')
 
 #Dati TCN corrispondenti in formato txt, ogni file ha una lunghezza di 3 s
-path_dati_TCN = os.path.join(fold, 'data', 'tcn')
+path_dati_TCN = tk.filedialog.askdirectory(title = "Seleziona cartella dati TCN") 
+#os.path.join(fold, 'Artes_audio', 'dati_pint', 'ID2_PINT_REC_19-09-2025_15_14_17')
 
 #Carica i file gps
 files_gps_csv = [f for f in os.listdir(path_gps_csv_files) if f.endswith('csv')]
@@ -200,10 +207,10 @@ for n in range(len(Start_seconds)):
                         gps_total.loc[n,'classe_acustica'] = int(classe_acustica)
                         gps_total.loc[n,'LF[315,1000]_max'] = spl_max
                         gps_total.loc[n,'LF[315,1000]_mean'] = spl_mean
-gps_total.to_csv('GPS_classe_acustica.csv')        
+path = tk.filedialog.asksaveasfilename(title = "Scegli il nome del file dove salvare i risultati", defaultextension = ".csv")
+
+gps_total.to_csv(path)        
                 
-
-
 
 
 
