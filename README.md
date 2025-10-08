@@ -47,13 +47,13 @@ L’obiettivo è **riconoscere automaticamente ammaloramenti dell’asfalto** (f
 La struttura del progetto è la seguente:
 ARTES.4.0-NOMADIA/
 
-├── README.md        # Descrizione generale del progetto
+├── README.md                 # Descrizione generale del progetto
 
-├── docs/                    # Documentazione tecnica e manuali 
+├── docs/                     # Documentazione tecnica e manuali 
 
-├── results/                 # Esempio di risultati 
+├── results/                  # Esempio di risultati 
 
-├── data/                    # Esempio dati acquisiti (per categoria) 
+├── data/                     # Esempio dati acquisiti (per categoria) 
 
 │   ├── gps                   # esempio dati gps raccolti (per intervalli 20m) 
 
@@ -61,16 +61,18 @@ ARTES.4.0-NOMADIA/
 
 │   ├── video.txt             # link video esempio 
 
-├── src/                     # Codice sorgente (modelli AI, algoritmi di analisi)
+├── src/                      # Codice sorgente (modelli AI, algoritmi di analisi)
 
-│   ├── audio               # Raccolta dati e analisi acustica 
+│   ├── audio                 # Raccolta dati e analisi acustica 
 
-│   ├── video               # Elaborazione video e riconoscimento visivo
+│   ├── video                 # Elaborazione video e riconoscimento visivo
+
+│   ├── creazione_setting     # Creazione di ambienti virtuali e cartelle di lavoro
+
+│   ├── scripts               # Scripts per l'automazione dell'avvio e analisi della misura
 
 
 ## 📋 Requisiti Tecnici
-
-Le dipendenze principali sono contenute rispettivamente nei file requirements.txt di ciascuna cartella (audio e video).
 
 Le dipendenze principali risultano essere:
   - **Python 3.9+**
@@ -85,37 +87,23 @@ Le dipendenze principali risultano essere:
   - Videocamera
   - GPS
 
-NOTA: si consiglia di utilizzare due ambienti virtuali una per la parte audio ed una per la parte video
+Per installare tutte le dipendenze necessarie sarà sufficiente mettersi con il terminale nella 
+cartella **src/creazione_setting** ed eseguire:
+```bash
+chmod +x creazione_setting.sh
 
-Ad esempio per creare l'ambiente audio, utilizzare il seguente comando:
-
-```bash
-python -m venv nome_ambiente_audio
+./creazione_setting.sh
 ```
-per attivarlo digitare:
-```bash
-source nome_ambiente_audio/bin/activate
-```
-successivamente, installare i requisiti necessari
-```bash
-pip install -r requirements_audio.txt
-```
-una volta creato, per disattivarlo, digitare:
-```bash
-deactivate
-```
-Ripetere gli step di creazione, attivazione e installazione anche per la parte video
+Al termine dell'esecuzione si sarenno create due cartelle (nella stessa parent directory di **creazione_setting**): 
+**Artes_Audio** e **Artes_Video** contenente ciascuna il proprio ambiente virtuale.
 
 ## 📋 Esecuzione misura
-Come prima cosa attivare l'apposito ambiente virtuale appena creato
+Verificare per prima cosa che tutti gli strumenti siano connessi con la scheda di elaborazione ed
+entrare con il terminale nella cartella **src/scripts**, dopodichè attivare e lanciare il codice di raccolta dati con i comandi:
 ```bash
-source nome_ambiente_audio/bin/activate
-```
+chmod +x avvio_misura.sh
 
-Dopodiché verificare che tutti gli strumenti siano connessi con la scheda di elaborazione ed
-eseguire il codice di raccolta dati con il comando:
-```bash
-python src/audio/main.py
+./avvio_misura.sh
 ```
 Per interrompere la misura basta premere il tasto "ENTER".  
 
@@ -124,31 +112,15 @@ Al termine il risultato dell'acquisizione sarà salvato all'interno di apposite 
 Per quanto riguarda il video acquisito della GoPro, si può scegliere la metodologia preferita per scaricarlo (wifi, cavo, sd). Si consiglia il salvataggio in una cartella di facile accesso (es: data).
 
 ## 📋 Elaborazione misura
-Al fine di analizzare coerentemente i dati raccolti e preprocessati durante la fase di misura è necessario procedere per step: iniziando con l'analisi della componente acustica (al fine di produrre una prima classificazione), per poi concludere con la parte visiva per ottenere l'indice finale su ciascun tratto.
-
-### PARTE AUDIO
-Per effettuare l'analisi audio è prima necessario disattivare l'ambiente virtuale mediante il comando
+Una volta completata la fase di misura e salvato il video registrato dalla GoPro, per analizzare le misure sarà sufficiente ricollocarsi con il terminale nella cartella **src/scripts**
+e attivare ed eseguire:
 ```bash
-deactivate
-```
-è poi sufficiente eseguire il codice:
-```bash
-python src/audio/Classificazione_tcn.py
-```
-assicurandosi di scegliere il fit più adatto alla misura in analisi (urbana, extraurbana o autostradale) decommentando la riga appropriata (37-39).
+chmod +x analisi_misura.sh
 
-### PARTE VIDEO
-Per effettuare l'analisi video è prima necessario attivare l'ambiente virtuale mediante il comando
-```bash
-source artes_video/bin/activate
+./analisi_misura.sh
 ```
+Durante l'esecuzione verrà richiesto di scegliere gli input per l'analisi (compreso il fit più adatto alla misura in analisi - urbana, extraurbana o autostradale) e i percorsi per gli output tramite apposite finestre.
 
-Sia **path_video** il percorso alla cartella contenente il/i video registrati durante l'esecuzione della misura; e **path_indice_audio** il percorso al file csv risultante dall'analisi audio appena svolta.
-
-Per eseguire l'analisi video è sufficiente indicare tali percorsi all'interno del file **src/video/main.py** (rispettivamente righe 9 e 22) e lanciare il codice:
-```bash
-python src/video/main.py
-```
 
 ## 📋 Output Previsti
 Il risultato verrà salvato nella cartella di lavoro sottoforma di:
