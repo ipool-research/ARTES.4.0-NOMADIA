@@ -17,8 +17,7 @@ from utils.gpx_to_csv_with_velocity import gpx_to_csv
 
 
 class Video_processing():
-    def __init__(self, path):
-        self.path = path
+    def __init__(self):
         self.visual_coverage = 5
         self.dir = []
         self.name = ''
@@ -31,14 +30,13 @@ class Video_processing():
         self.counternan =0
         self.output_file_csv = ''
     
-    def set_dir(self, folder_name):
-        self.dir.append(folder_name)
-        self.name = folder_name
+    def set_dir(self, folder_path):
+        self.dir.append(folder_path)
+        self.name = os.path.basename(folder_path)
 
     def estrai_gpx(self, name):
-        output_path_senza_estensione = os.path.join(self.path, self.dir[0], name)
-        input_file = os.path.join(self.path, self.dir[0], name+'.MP4')
-        print(input_file)
+        output_path_senza_estensione = os.path.join(self.dir[0], name)
+        input_file = os.path.join(self.dir[0], f"{name}.MP4")
         comando = [
             "python", "-m", "gopro2gpx.gopro2gpx",
             input_file,
@@ -52,8 +50,8 @@ class Video_processing():
             print(f"Errore durante l'esecuzione del comando: {e}")
 
     def extract_csv(self, name):
-        input_file = os.path.join(self.path, self.dir[0], name + '.gpx')
-        output_file = os.path.join(self.path, self.dir[0], 'csv', name + '-gps.csv')
+        input_file = os.path.join(self.dir[0], name + '.gpx')
+        output_file = os.path.join(self.dir[0], 'csv', name + '-gps.csv')
         # Verifica che il file esista 
         if not os.path.exists(input_file):
             print(f"Errore: il file '{input_file}' non esiste.")
@@ -62,8 +60,8 @@ class Video_processing():
         self.tempo_inizio = gpx_to_csv(input_file, output_file )
 
     def merge_csv(self):
-        cartella = os.path.join(self.path, self.dir[0], 'csv')
-        self.output_file_csv = os.path.join(self.path, self.dir[0], self.name +'-gps.csv')
+        cartella = os.path.join(self.dir[0], 'csv')
+        self.output_file_csv = os.path.join(self.dir[0], self.name +'-gps.csv')
         file_csv = [f for f in os.listdir(cartella) if f.lower().endswith('.csv')]
         file_csv.sort()  # Ordine alfabetico, opzionale
 
@@ -106,7 +104,7 @@ class Video_processing():
 
 
     def start_time(self):
-        csv_file = os.path.join(self.path, self.dir[0], self.output_file_csv) 
+        csv_file = os.path.join(self.dir[0], self.output_file_csv) 
         print(csv_file)
         df = pd.read_csv(csv_file, usecols=['TS'])
         for raw_value in df['TS']:
@@ -135,7 +133,7 @@ class Video_processing():
 
     def organizza_frames(self, timestamp_ini):
         # Cartella di output
-        self.output_folder = os.path.join(self.path, self.name, 'frames_estratti')
+        self.output_folder = os.path.join(self.dir[0], 'frames_estratti')
         os.makedirs(self.output_folder, exist_ok=True)
 
         # Imposta self.tempo_inizio leggendo dal CSV
