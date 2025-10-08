@@ -98,7 +98,7 @@ Al termine dell'esecuzione si sarenno create due cartelle (nella stessa parent d
 **Artes_Audio** e **Artes_Video** contenente ciascuna il proprio ambiente virtuale.
 
 ## 📋 Esecuzione misura
-Verificare per prima cosa che tutti gli strumenti siano connessi con la scheda di elaborazione (GPS, PINT e GoPro) ed
+Verificare per prima cosa che tutti gli strumenti (GPS, PINT e GoPro) siano connessi con la scheda di elaborazione ed
 entrare con il terminale nella 
 cartella **src/scripts**, dopodichè attivare e lanciare il codice di raccolta dati con i comandi:
 ```bash
