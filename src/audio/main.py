@@ -7,9 +7,12 @@ import pytz
 import os
 import gopro
 import gps
+import tkinter as tk
 
 stop_event = threading.Event()
-path = '/home/ipool/Desktop/Artes' #sostituire con il percorso della cartella corrispondente
+root = tk.Tk()
+root.withdraw()
+path = tk.filedialog.askdirectory(title = "Seleziona cartella di salvataggio dati") 
 
 def wait_for_stop():
     input("Premi ENTER per fermare la registrazione...\n")
