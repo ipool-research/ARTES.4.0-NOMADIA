@@ -25,8 +25,8 @@ WHEELS_DIR="$PROJ_DIR/downloads"
 
 # === Directory ESTERNE da creare
 PARENT_DIR="$(dirname "$PROJ_DIR")"
-BASE1="$PARENT_DIR/Artes_Audio1"
-BASE2="$PARENT_DIR/Artes_Video1"
+BASE1="$PARENT_DIR/Artes_Audio"
+BASE2="$PARENT_DIR/Artes_Video"
 ENV1_DIR="$BASE1/artes_audio"
 ENV2_DIR="$BASE2/artes_video"
 
