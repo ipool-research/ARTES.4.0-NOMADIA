@@ -69,7 +69,7 @@ ARTES.4.0-NOMADIA/
 
 │   ├── creazione_setting     # Creazione di ambienti virtuali e cartelle di lavoro
 
-│   ├── scripts               # Scripts per l'automazione dell'avvio e analisi della misura
+│   ├── script               # Scripts per l'automazione dell'avvio e analisi della misura
 
 
 ## 📋 Requisiti Tecnici
@@ -94,13 +94,12 @@ chmod +x creazione_setting.sh
 
 ./creazione_setting.sh
 ```
-Al termine dell'esecuzione si sarenno create due cartelle (nella stessa parent directory di **creazione_setting**): 
-**Artes_Audio** e **Artes_Video** contenente ciascuna il proprio ambiente virtuale.
+Al termine dell'esecuzione si saranno create due cartelle (nella stessa parent directory di **creazione_setting**): 
+**Artes_Audio** e **Artes_Video** contenenti ciascuna il proprio ambiente virtuale.
 
 ## 📋 Esecuzione misura
 Verificare per prima cosa che tutti gli strumenti (GPS, PINT e GoPro) siano connessi con la scheda di elaborazione ed
-entrare con il terminale nella 
-cartella **src/scripts**, dopodichè attivare e lanciare il codice di raccolta dati con i comandi:
+entrare con il terminale nella cartella **src/script**, dopodichè attivare e lanciare il codice di raccolta dati con i comandi:
 ```bash
 chmod +x avvio_misura.sh
 
@@ -113,7 +112,7 @@ Al termine il risultato dell'acquisizione sarà salvato all'interno di apposite 
 Per quanto riguarda il video acquisito della GoPro, si può scegliere la metodologia preferita per scaricarlo (wifi, cavo, sd). Si consiglia il salvataggio in una cartella di facile accesso (es: data).
 
 ## 📋 Elaborazione misura
-Una volta completata la fase di misura e salvato il video registrato dalla GoPro, per analizzare le misure sarà sufficiente ricollocarsi con il terminale nella cartella **src/scripts**
+Una volta completata la fase di misura e salvato il video registrato dalla GoPro, per analizzare le misure sarà sufficiente ricollocarsi con il terminale nella cartella **src/script**
 e attivare ed eseguire:
 ```bash
 chmod +x analisi_misura.sh
