@@ -12,7 +12,7 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 from utils.speed_functions import get_fps_video,resample_speed
 from utils.displacement_functions import calculate_frame_extraction_points, extract_specific_frames3_512_decentr
-from gopro2gpx.gopro2gpx import main
+#from gopro2gpx.gopro2gpx import main
 from utils.gpx_to_csv_with_velocity import gpx_to_csv
 
 
@@ -36,20 +36,51 @@ class Video_processing():
         self.name = folder_name
 
     def estrai_gpx(self, name):
-        output_path_senza_estensione = os.path.join(self.path, self.dir[0], name)
-        input_file = os.path.join(self.path, self.dir[0], name+'.MP4')
-        print(input_file)
+        # Percorsi di I/O
+        input_file = os.path.join(self.path, self.dir[0], f"{name}.MP4")
+        output_stem = os.path.join(self.path, self.dir[0], name)  # senza estensione
+
+        # Verifiche preliminari
+        if not os.path.isfile(input_file):
+            print(f"[ERRORE] File video non trovato: {input_file}")
+            return False
+        os.makedirs(os.path.dirname(output_stem), exist_ok=True)
+
+        # CWD: parent del package locale "gopro2gpx" (quello che contiene la cartella 'gopro2gpx' con __init__.py)
+        # struttura attesa: Artes_video/gopro2gpx/gopro2gpx/__init__.py
+        ROOT = os.path.dirname(os.path.abspath(__file__))              # .../Artes_video
+        PKG_PARENT = os.path.join(ROOT, "gopro2gpx")                   # .../Artes_video/gopro2gpx
+
+        # Comando: usa l'interprete corrente e il package entry-point
         comando = [
-            "python", "-m", "gopro2gpx.gopro2gpx",
+            sys.executable, "-m", "gopro2gpx",
             input_file,
-            output_path_senza_estensione,
+            output_stem,
             "--gpx"
         ]
         try:
-            subprocess.run(comando, check=True)
+            # Catturo stdout/stderr per messaggi chiari in caso di errore
+            res = subprocess.run(
+                comando,
+                cwd=PKG_PARENT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            if res.stdout:
+                print(res.stdout.strip())
             print("GPX estratto con successo.")
+            return True
         except subprocess.CalledProcessError as e:
-            print(f"Errore durante l'esecuzione del comando: {e}")
+            print("[ERRORE] Il comando è fallito con exit code", e.returncode)
+            if e.stdout:
+                print("--- STDOUT ---")
+                print(e.stdout.strip())
+            if e.stderr:
+                print("--- STDERR ---")
+                print(e.stderr.strip())
+        return False
 
     def extract_csv(self, name):
         input_file = os.path.join(self.path, self.dir[0], name + '.gpx')
@@ -143,9 +174,9 @@ class Video_processing():
 
         # Calcola quanti secondi tra tempo_inizio e timestamp_ini
         timestamp_start = parse_datetime(timestamp_ini)
-
+        print(timestamp_start)
         delta_secondi = abs((timestamp_start - self.tempo_inizio).total_seconds())
-
+        print(delta_secondi)
         frame_start_index = int(delta_secondi * self.fps)
         print(frame_start_index)
 
@@ -270,5 +301,4 @@ def parse_datetime(time_str):
         return datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S.%f")
     except ValueError:
         return datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
-
 
