@@ -1,7 +1,6 @@
 import os
 import cv2
 import threading
-import queue
 import time
 import shutil
 from concurrent.futures import ThreadPoolExecutor
@@ -9,8 +8,51 @@ import datetime
 from multiprocessing import Process, Queue as MPQueue, cpu_count
 from tqdm import tqdm
 
+
+def try_open_video(video_path: str):
+    """
+    Prova ad aprire il video con diversi backend, in ordine:
+      1) GStreamer CPU H.265
+      2) GStreamer CPU H.264
+      3) Fallback OpenCV (senza GStreamer)
+    Ritorna (cap, used_pipe) dove used_pipe è la stringa pipeline o None (fallback OpenCV).
+    """
+    candidates = [
+        # 1) CPU H.265 (HEVC)
+        (
+            "filesrc location={p} ! qtdemux ! h265parse ! "
+            "avdec_h265 ! videoconvert ! video/x-raw,format=BGR ! "
+            "appsink drop=true max-buffers=1 sync=false"
+        ).format(p=video_path),
+
+        # 2) CPU H.264 (per eventuali altri file)
+        (
+            "filesrc location={p} ! qtdemux ! h264parse ! "
+            "avdec_h264 ! videoconvert ! video/x-raw,format=BGR ! "
+            "appsink drop=true max-buffers=1 sync=false"
+        ).format(p=video_path),
+
+        # 3) Fallback OpenCV (senza GStreamer)
+        None,
+    ]
+
+    for pipe in candidates:
+        if pipe is None:
+            cap = cv2.VideoCapture(video_path)
+        else:
+            cap = cv2.VideoCapture(pipe, cv2.CAP_GSTREAMER)
+
+        if cap.isOpened():
+            return cap, pipe
+
+        cap.release()
+
+    return None, None
+
+
 class GoProH265FastExtractor:
-    def __init__(self, video_folder, video_limits, extraction_points, output_folder, x_0=360, height=0, crop_size=1080):
+    def __init__(self, video_folder, video_limits, extraction_points, output_folder,
+                 x_0=360, height=0, crop_size=1080):
         self.video_folder = video_folder
         self.video_limits = video_limits
         self.extraction_points = set(extraction_points)
@@ -27,16 +69,17 @@ class GoProH265FastExtractor:
 
         os.makedirs(self.temp_output_folder, exist_ok=True)
         os.makedirs(self.output_folder, exist_ok=True)
-        self.videos = sorted([f for f in os.listdir(self.video_folder) if f.lower().endswith('.mp4')])
+        self.videos = sorted([f for f in os.listdir(self.video_folder)
+                              if f.lower().endswith('.mp4')])
 
     def run(self):
-        print("\U0001F680 Avvio estrazione frame parallela (Jetson Orin Nano)...")
-        print("\U0001F552 Orario di partenza:", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        print("🚀 Avvio estrazione frame parallela...")
+        print("🕒 Orario di partenza:", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         t_start = time.perf_counter()
 
         self.pbar = tqdm(total=self.total_frames, desc="Estrazione frame", unit="frame")
 
-        num_processes =  cpu_count()
+        num_processes = cpu_count()
         processes = []
         mp_queues = []
 
@@ -56,7 +99,7 @@ class GoProH265FastExtractor:
             p.join()
 
         # Copia dei file da RAM-disk a SSD
-        print("\U0001F4C5 Copia dei file da RAM a SSD...")
+        print("📅 Copia dei file da RAM a SSD...")
         for file in os.listdir(self.temp_output_folder):
             src = os.path.join(self.temp_output_folder, file)
             dst = os.path.join(self.output_folder, file)
@@ -64,8 +107,8 @@ class GoProH265FastExtractor:
 
         self.pbar.close()
         t_end = time.perf_counter()
-        print(f"\u23F1️ Tempo totale: {t_end - t_start:.2f} s")
-        print(f"\U0001F4BE Frame salvati in: {self.output_folder}")
+        print(f"⏱️ Tempo totale: {t_end - t_start:.2f} s")
+        print(f"💾 Frame salvati in: {self.output_folder}")
 
     def extract_from_list(self, video_list, result_queue):
         executor = ThreadPoolExecutor(max_workers=4)
@@ -73,12 +116,19 @@ class GoProH265FastExtractor:
 
         for video_name in video_list:
             video_path = os.path.join(self.video_folder, video_name)
-            gst_pipeline = build_gstreamer_pipeline(video_path)
-            cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
 
-            if not cap.isOpened():
-                print(f"❌ Impossibile aprire {video_name}")
+            # --- apertura robusta (GStreamer H.265/H.264 + fallback OpenCV) ---
+            cap, used_pipe = try_open_video(video_path)
+            if not cap:
+                print(f"❌ Impossibile aprire {video_name} (provati: GStreamer H.265/H.264 e backend OpenCV)")
                 continue
+            else:
+                if used_pipe is None:
+                    print(f"ℹ️  {video_name}: aperto con backend OpenCV (senza GStreamer)")
+                else:
+                    # Troncamento per log pulito
+                    preview = used_pipe[:120] + ("..." if len(used_pipe) > 120 else "")
+                    print(f"ℹ️  {video_name}: uso pipeline GStreamer: {preview}")
 
             start_idx = self.video_limits[0]  # Inizio assoluto
             frame_idx = 0
@@ -98,6 +148,7 @@ class GoProH265FastExtractor:
                             self.pbar.update(1)
 
                         if len(batch) >= self.BATCH_SIZE:
+                            # invia copia del batch al thread writer
                             executor.submit(self.save_batch, list(batch))
                             batch.clear()
 
@@ -118,7 +169,8 @@ class GoProH265FastExtractor:
                 y_start = self.height
 
             x_start = self.x_0 if self.x_0 > 0 else (frame.shape[1] - self.crop_size) // 2
-            cropped_img = frame[y_start:y_start + self.crop_size, x_start:x_start + self.crop_size]
+            cropped_img = frame[y_start:y_start + self.crop_size,
+                                x_start:x_start + self.crop_size]
             resized_img = cv2.resize(cropped_img, self.resize_size, interpolation=cv2.INTER_AREA)
             return resized_img
         except Exception as e:
@@ -129,17 +181,5 @@ class GoProH265FastExtractor:
         for img, video_name, frame_idx in items:
             name = video_name.split('.MP4')[0]
             output_path = os.path.join(self.temp_output_folder, f'{name}_frame_{frame_idx}.jpg')
+            # qualità 85: buon compromesso velocità/peso
             cv2.imwrite(output_path, img, [cv2.IMWRITE_JPEG_QUALITY, 85])
-
-def build_gstreamer_pipeline(filepath):
-    return (
-        f"filesrc location={filepath} ! "
-        "qtdemux ! "
-        "h265parse ! "
-        "nvv4l2decoder ! "
-        "nvvidconv ! "
-        "video/x-raw, format=BGRx ! "
-        "videoconvert ! "
-        "video/x-raw, format=BGR ! "
-        "appsink drop=true max-buffers=1"
-    )
