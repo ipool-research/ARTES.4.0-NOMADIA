@@ -37,6 +37,7 @@ fs==2.4.12
 fsspec==2024.12.0
 future==0.18.2
 gast==0.5.3
+geopy==2.4.1
 google-pasta==0.2.0
 goprocam==4.2.0
 gpxpy==1.6.2
