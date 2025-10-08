@@ -8,11 +8,12 @@ import os
 import gopro
 import gps
 import tkinter as tk
+from tkinter import filedialog
 
 stop_event = threading.Event()
 root = tk.Tk()
 root.withdraw()
-path = tk.filedialog.askdirectory(title = "Seleziona cartella di salvataggio dati") 
+path = filedialog.askdirectory(title = "Seleziona cartella di salvataggio dati") 
 
 def wait_for_stop():
     input("Premi ENTER per fermare la registrazione...\n")
