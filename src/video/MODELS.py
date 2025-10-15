@@ -70,7 +70,7 @@ def process_folder_filtered(folder_path, model, img_size=512, batch_size=8, conf
         results = model.predict(
             batch_paths,
             imgsz=img_size,
-            conf=0.1,
+            conf=0.3,
             iou=0.5,
             device='cuda' if torch.cuda.is_available() else 'cpu',
             save=False,
