@@ -79,7 +79,7 @@ def results_for_filtered(results, image_size, classes_treshs):
     filtered_classes = []
 
     for box, score, cls in zip(boxes, scores, classes):
-        if classes_treshs is None or score >= classes_treshs.get(int(cls), 0.1):
+        if classes_treshs is None or score >= max(classes_treshs[int(cls)], 0.1): 
             filtered_boxes.append(box)
             filtered_scores.append(score)
             filtered_classes.append(cls)
