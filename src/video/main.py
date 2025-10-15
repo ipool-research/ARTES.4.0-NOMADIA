@@ -68,7 +68,7 @@ def main_function(cartella):        #Nome della cartella con tutti i video dentr
     timestamp_start = df['Start'].iloc[0] 
     video_class.organizza_frames(timestamp_start)
 
-    model_class.run_all_folders_filtered()
+    model_class.run_all_folders_filtered(confidence_thresholds = {0: 0.3, 1: 0.3, 2: 0.35, 3: 0.4, 4: 0.5})
 
     index_class.process_all_folders_parallel()
     processor = AmmaloramentiProcessor(cartella,audio_gps_path) 
