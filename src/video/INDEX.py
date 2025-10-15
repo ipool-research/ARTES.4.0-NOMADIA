@@ -55,10 +55,10 @@ class Index():
             class_id, xc, yc, bw, bh = map(float, line.split())
 
             # Coordinate in pixel
-            x1 = int(xc - bw / 2)
-            y1 = int(yc - bh / 2)
-            x2 = int(xc + bw / 2)
-            y2 = int(yc + bh / 2)
+            x1 = int((xc - bw / 2)*w)
+            y1 = int((yc - bh / 2)*h)
+            x2 = int((xc + bw / 2)*w)
+            y2 = int((yc + bh / 2)*h)
 
             # Clipping all'immagine
             x1, y1 = max(0, x1), max(0, y1)
