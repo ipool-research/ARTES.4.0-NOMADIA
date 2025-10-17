@@ -253,6 +253,58 @@ def calcola_indice(df):
             return 1
         else:
             return 0
+        
+def calcola_indice_new(df):
+    cols_pot = ["Alligator_both","Pothole_both","Alligator_sx","Pothole_sx",
+                "Alligator_dx","Pothole_dx","Alligator","Pothole"]
+    cols_crk = ["Longitudinal_both","Transverse_both","Longitudinal_sx","Transverse_sx",
+                "Longitudinal_dx","Transverse_dx","Longitudinal","Transverse"]
+
+    pot_df = df[cols_pot].apply(pd.to_numeric, errors="coerce").fillna(0)
+    crk_df = df[cols_crk].apply(pd.to_numeric, errors="coerce").fillna(0)
+
+    P_A_ormaie = int(pot_df[["Alligator_both","Pothole_both","Alligator_sx","Pothole_sx","Alligator_dx","Pothole_dx"]].to_numpy().sum())
+    
+    if P_A_ormaie >= 4:
+        P_A = 3
+    elif P_A_ormaie >= 1:
+        P_A = 2
+    else:
+        P_A_fuori = int(pot_df[["Alligator","Pothole"]].to_numpy().sum())
+        if P_A_fuori >= 4:
+            P_A = 2
+        elif P_A_fuori >= 1:
+            P_A = 1
+        else:
+            P_A = 0
+
+
+    L_T_ormaie = int(crk_df[["Longitudinal_both","Transverse_both","Longitudinal_sx","Transverse_sx","Longitudinal_dx","Transverse_dx"]].to_numpy().sum())
+
+    if L_T_ormaie >= 6:
+        L_T = 3
+    elif L_T_ormaie >= 1:
+        L_T = 2
+    else:
+        L_T_fuori = int(crk_df[["Longitudinal","Transverse"]].to_numpy().sum())
+        if L_T_fuori >= 6:
+            L_T = 2
+        elif L_T_fuori >= 1:
+            L_T = 1
+        else:
+            L_T = 0
+
+
+    somma_pesata = 1*P_A + 0.8*L_T
+
+    if somma_pesata < 1:
+        return 0
+    elif somma_pesata < 3.5:
+        return 1
+    elif somma_pesata < 4.5:
+        return 2
+    else:
+        return 3       
 
     
 def calcola_indice_per_riga(classe_acustica, pot_sx_both, pot_dx, pot_fuori,
