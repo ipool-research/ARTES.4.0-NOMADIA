@@ -49,8 +49,6 @@ ARTES.4.0-NOMADIA/
 
 ├── README.md        # Descrizione generale del progetto
 
-├── docs/                    # Documentazione tecnica e manuali 
-
 ├── results/                 # Esempio di risultati 
 
 ├── data/                    # Esempio dati acquisiti (per categoria) 
